@@ -1,0 +1,173 @@
+C51 COMPILER V9.59.0.0   UART                                                              03/13/2020 13:29:31 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE UART
+OBJECT MODULE PLACED IN .\Objects\uart.obj
+COMPILER INVOKED BY: h:\Keil_v5\C51\BIN\C51.EXE ..\BSP\USART\uart.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\BSP\TSIC506;..\BS
+                    -P\USART;..\BSP\BSP;..\BSP\DELAY) DEBUG OBJECTEXTEND PRINT(.\Listings\uart.lst) OBJECT(.\Objects\uart.obj)
+
+line level    source
+
+   1          #include <uart.h>
+   2          
+   3          uchar data TBUF = 0, RBUF = 0;
+   4          uchar data TDAT = 0, RDAT = 0;
+   5          uchar data TCNT = 0, RCNT = 0;  // ·¢ËÍºÍ½ÓÊÕ¼ì²â ¼ÆÊýÆ÷(3±¶ËÙÂÊ¼ì²â)
+   6          uchar data TBIT = 0, RBIT = 0;  // ·¢ËÍºÍ½ÓÊÕµÄÊý¾Ý¼ÆÊýÆ÷
+   7          uchar data t = 0, r = 0;
+   8          uchar data Rev_buf[BUFF_SIZE] = "0";
+   9          uchar data S_BUF;   // ÓÃÓÚ½ÓÊÕ´®¿ÚÒ»¸ö×Ö½ÚµÄ·µ»ØÖµ
+  10          bit flag = 0;       // ÓÃÓÚ±êÖ¾ÊÇ·ñÓÐÊý¾Ýµ½À´
+  11          
+  12          bit  TING, RING;        // ÕýÔÚ·¢ËÍ»ò½ÓÊÕÒ»¸ö×Ö½Ú
+  13          bit  TEND, REND;        // ½ÓÊÕ»ò·¢ËÍÍê³ÉµÄ±êÖ¾Î»
+  14          
+  15          
+  16          // UARTÄ£¿éµÄ³õÊ¼±äÁ¿   initial UART module variable
+  17          void uart_init()
+  18          {
+  19   1              InternalRAM_enable();
+  20   1              Timer0_1T();
+  21   1              Timer0_AsTimer();
+  22   1              Timer0_16bitAutoReload();       // ÉèÖÃ¶¨Ê±Æ÷0Î»16Î»×Ô¶¯ÖØ×°Ä£Ê½
+  23   1              Timer0_Load(Timer0_Reload);
+  24   1              Timer0_InterruptEnable();
+  25   1              Timer0_Run();
+  26   1              EA = 1;
+  27   1              TING = 0;
+  28   1              RING = 0;
+  29   1              REND = 0;
+  30   1          TEND = 1;
+  31   1              TCNT = 0;
+  32   1              RCNT = 0;
+  33   1      }
+  34          
+  35          void uart_send(uchar dat)     // ´®¿Ú·¢ËÍÒ»¸ö×Ö½Úº¯Êý
+  36          {
+  37   1         if(TEND)
+  38   1          {
+  39   2              TEND = 0;
+  40   2              TBUF = dat;
+  41   2              TING = 1;
+  42   2              while(!TEND);
+  43   2          }
+  44   1      }
+  45          
+  46          uchar uart_receive(void)     // ½ÓÊÕº¯Êý
+  47          {
+  48   1              if (REND)                                // Èç¹û½ÓÊÕÍê,°Ñ½ÓÊÕµ½µÄÖµ´æÈë½ÓÊÕS_BUF
+  49   1              {
+  50   2                      REND = 0;
+  51   2              if(r < BUFF_SIZE) Rev_buf[r++] = RBUF;
+  52   2              else r = 0;
+  53   2              S_BUF = RBUF;
+  54   2              flag = 1;
+C51 COMPILER V9.59.0.0   UART                                                              03/13/2020 13:29:31 PAGE 2   
+
+  55   2              }
+  56   1          return S_BUF;
+  57   1      }
+  58          
+  59          
+  60          // ÖØ¶¨Ïòprintf,ÐèÒªÖØÐ´putcharº¯Êý£»µ±°üº¬ stdio.h Í·ÎÄ¼þÊ±£¬¿ÉÒÔÖ±½ÓºÍ±ê×¼CÒ»ÑùÊ¹ÓÃprintf½øÐÐ¸ñÊ½»¯Êä³ö¡
+             -£
+  61          char putchar(char c)
+  62          {
+  63   1          uart_send(c);
+  64   1          return c;
+  65   1      }
+  66          
+  67          
+  68          
+  69          // ·¢ËÍÒ»´®×Ö·û´®
+  70          void uart_printf(uchar * p_buf)
+  71          {
+  72   1          while(*p_buf != '\0')
+  73   1          {
+  74   2              uart_send(*p_buf);
+  75   2              p_buf++;
+  76   2          }
+  77   1      }
+  78          
+  79          
+  80          
+  81          // ¶¨Ê±Æ÷0ÖÐ¶Ï³ÌÐòfor UART ÒÔ²¨ÌØÂÊ3±¶µÄËÙ¶È²ÉÑùÅÐ¶Ï ¿ªÊ¼Î»             Timer interrupt routine for UART
+  82          void tm0(void) interrupt 1 using 1
+  83          {
+  84   1      
+  85   1              if (RING)
+  86   1              {
+  87   2                      if (--RCNT == 0)                                  // ½ÓÊÕÊý¾ÝÒÔ¶¨Ê±Æ÷µÄ1/3À´½ÓÊÕ
+  88   2                      {
+  89   3                              RCNT = 3;                     // ÖØÖÃ½ÓÊÕ¼ÆÊýÆ÷  ½ÓÊÕÊý¾ÝÒÔ¶¨Ê±Æ÷µÄ1/3À´½ÓÊÕ    reset send baudrate counte
+             -r
+  90   3                              if (--RBIT == 0)                          // ½ÓÊÕÍêÒ»Ö¡Êý¾Ý
+  91   3                              {
+  92   4                                      RBUF = RDAT;              // ´æ´¢Êý¾Ýµ½»º³åÇø   save the data to RBUF
+  93   4                                      RING = 0;                 // Í£Ö¹½ÓÊÕ                   stop receive
+  94   4                                      REND = 1;                 // ½ÓÊÕÍê³É±êÖ¾ÉèÖÃ   set receive completed flag
+  95   4                              }
+  96   3                              else
+  97   3                              {
+  98   4                                      RDAT >>= 1;                           // °Ñ½ÓÊÕµÄµ¥bÊý¾Ý ÔÝ´æµ½ RDAT(½ÓÊÕ»º³å)
+  99   4                                      if (RXB) RDAT |= 0x80;    // shift RX data to RX buffer
+ 100   4                              }
+ 101   3                      }
+ 102   2              }
+ 103   1      
+ 104   1              else if (!RXB)                            // ÅÐ¶ÏÊÇ²»ÊÇ¿ªÊ¼Î» RXB=0;
+ 105   1              {
+ 106   2                      RING = 1;                         // Èç¹ûÊÇÔòÉèÖÃ¿ªÊ¼½ÓÊÕ±êÖ¾Î»         set start receive flag
+ 107   2                      RCNT = 4;                         // ³õÊ¼»¯½ÓÊÕ²¨ÌØÂÊ¼ÆÊýÆ÷             initial receive baudrate counter
+ 108   2                      RBIT = RxBitLenth;                // ³õÊ¼»¯½ÓÊÕµÄÊý¾ÝÎ»Êý(8¸öÊý¾ÝÎ»+1¸öÍ£Ö¹Î»)    initial receive bit nu
+             -mber (8 data bits + 1 stop bit)
+ 109   2              }
+ 110   1      
+ 111   1          if (--TCNT == 0)                              // ·¢ËÍÊý¾ÝÒÔ¶¨Ê±Æ÷µÄ1/3À´·¢ËÍ
+ 112   1          {
+ 113   2              TCNT = 3;                                         // ÖØÖÃ·¢ËÍ¼ÆÊýÆ÷   reset send baudrate counter
+C51 COMPILER V9.59.0.0   UART                                                              03/13/2020 13:29:31 PAGE 3   
+
+ 114   2              if(TING)
+ 115   2              {
+ 116   3                  if (TBIT == 0)                            // ·¢ËÍ¼ÆÊýÆ÷Îª0 ±íÃ÷µ¥×Ö½Ú·¢ËÍ»¹Ã»¿ªÊ¼
+ 117   3                  {
+ 118   4                      TXB = 0;                              // ·¢ËÍ¿ªÊ¼Î»                                             send start bit
+ 119   4                      TDAT = TBUF;                  // °Ñ»º³åµÄÊý¾Ý·Åµ½·¢ËÍµÄbuff             load data from TBUF to TDAT
+ 120   4                      TBIT = TxBitLenth;            // ·¢ËÍÊý¾ÝÎ»Êý (8Êý¾ÝÎ»+1Í£Ö¹Î») initial send bit number (8 data
+             - bits + 1 stop bit)
+ 121   4                  }
+ 122   3                  else                                              // ·¢ËÍ¼ÆÊýÆ÷Îª·Ç0 ÕýÔÚ·¢ËÍÊý¾Ý
+ 123   3                  {
+ 124   4                      TDAT >>= 1;                       // °Ñ×îµÍÎ»ËÍµ½ CY(Òæ´¦±êÖ¾Î») shift data to CY
+ 125   4                      if (--TBIT == 0)              // ·¢ËÍ¼ÆÊýÆ÷¼õÎª0 ±íÃ÷µ¥×Ö½Ú·¢ËÍ½áÊø
+ 126   4                      {
+ 127   5                          TXB = 1;                  // ËÍÍ£Ö¹Î»Êý¾Ý
+ 128   5                          TING = 0;                 // ·¢ËÍÍ£Ö¹Î»                     stop send
+ 129   5                          TEND = 1;             // ÖÃÎ»·¢ËÍÍê³É±êÖ¾·û      set send completed flag
+ 130   5                      }
+ 131   4                      else
+ 132   4                      {
+ 133   5                          TXB = CY;                 // ·¢ËÍµ¥bÊý¾Ý                            write CY to TX port
+ 134   5                      }
+ 135   4                  }
+ 136   3              }
+ 137   2          }
+ 138   1      }
+ 139          
+ 140          
+ 141          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    223    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     41    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      5    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

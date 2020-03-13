@@ -1,0 +1,1 @@
+"..\BSP\TIMER\timer.c" OPTIMIZE (8,SPEED) BROWSE INCDIR(..\BSP\TIMER;..\BSP\TSIC506;..\BSP\USART;..\BSP\BSP) DEBUG OBJECTEXTEND PRINT(.\Listings\timer.lst) OBJECT(.\Objects\timer.obj)

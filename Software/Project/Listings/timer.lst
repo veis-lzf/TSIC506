@@ -1,0 +1,25 @@
+C51 COMPILER V9.59.0.0   TIMER                                                             02/23/2019 13:41:27 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE TIMER
+OBJECT MODULE PLACED IN .\Objects\timer.obj
+COMPILER INVOKED BY: h:\Keil_v5\C51\BIN\C51.EXE ..\BSP\TIMER\timer.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\BSP\TIMER;..\BSP
+                    -\TSIC506;..\BSP\USART;..\BSP\BSP) DEBUG OBJECTEXTEND PRINT(.\Listings\timer.lst) OBJECT(.\Objects\timer.obj)
+
+line level    source
+
+   1          #include <timer.h>
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   ----    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

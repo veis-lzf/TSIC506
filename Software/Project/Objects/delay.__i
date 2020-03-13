@@ -1,0 +1,1 @@
+"..\BSP\DELAY\delay.c" OPTIMIZE (8,SPEED) BROWSE INCDIR(..\BSP\TSIC506;..\BSP\USART;..\BSP\BSP;..\BSP\DELAY) DEBUG OBJECTEXTEND PRINT(.\Listings\delay.lst) OBJECT(.\Objects\delay.obj)

@@ -1,0 +1,117 @@
+C51 COMPILER V9.59.0.0   TSIC506                                                           03/13/2020 13:29:31 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE TSIC506
+OBJECT MODULE PLACED IN .\Objects\tsic506.obj
+COMPILER INVOKED BY: h:\Keil_v5\C51\BIN\C51.EXE ..\BSP\TSIC506\tsic506.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\BSP\TSIC506;
+                    -..\BSP\USART;..\BSP\BSP;..\BSP\DELAY) DEBUG OBJECTEXTEND PRINT(.\Listings\tsic506.lst) OBJECT(.\Objects\tsic506.obj)
+
+line level    source
+
+   1          #include <tsic506.h>
+   2          #include <delay.h>
+   3          
+   4          
+   5          // 初始化函数
+   6          BOOL tsic506_init()
+   7          {
+   8   1          DQ = 1;
+   9   1          while(!DQ);
+  10   1          return TRUE;
+  11   1      }
+  12          
+  13          // 读取一次总线上的数据
+  14          uint read_byte(void)
+  15          {
+  16   1          uchar i;
+  17   1          uint temp_value = 0;
+  18   1      
+  19   1          // 等待开始信号
+  20   1          while(DQ == 1);  // 等待总线被从机拉低
+  21   1          while(DQ == 0);  // 等待就绪
+  22   1          
+  23   1          // 在下降沿读取8位数据+1位奇偶校验位
+  24   1          for (i = 0; i < 9; i++)
+  25   1          {
+  26   2              while(DQ == 1);   // 等待下降沿产生，以读取总线
+  27   2              delay_5us(12);
+  28   2              if (DQ == 1)
+  29   2              {
+  30   3                  temp_value |= 1 << (8-i); // 取一个位，从高位开始存
+  31   3              }
+  32   2              else
+  33   2              {
+  34   3                  while(DQ == 0);  // 等待总线再次拉高，便于下次产生下降沿
+  35   3              }
+  36   2          }
+  37   1          
+  38   1          return temp_value;
+  39   1      }
+  40          
+  41          // 检查校验位是否为1
+  42          BOOL Check_Parity(uint value)
+  43          {
+  44   1          uchar i;
+  45   1          uchar parity = 0;
+  46   1          
+  47   1          for (i = 0; i < 9; i++)
+  48   1          {
+  49   2              if (value & (1 << i))
+  50   2              {
+  51   3                  parity++;
+  52   3              }
+  53   2          }
+  54   1          if (parity % 2)
+C51 COMPILER V9.59.0.0   TSIC506                                                           03/13/2020 13:29:31 PAGE 2   
+
+  55   1          {
+  56   2              return FALSE;
+  57   2          }
+  58   1          
+  59   1          return TRUE;  
+  60   1      }
+  61          
+  62          // 获取温度
+  63          BOOL getTSIC_Temp (uint *temp_value16)
+  64          {
+  65   1          uint temp_value1 = 0;
+  66   1          uint temp_value2 = 0;
+  67   1          uint Temperature;
+  68   1          
+  69   1          temp_value1 = read_byte();
+  70   1          temp_value2 = read_byte();
+  71   1          
+  72   1          // 校验温度数据高字节
+  73   1          while(!Check_Parity(temp_value1))
+  74   1          {
+  75   2              return FALSE;
+  76   2          }
+  77   1          // 校验温度数据低字节
+  78   1          while(!Check_Parity(temp_value2))
+  79   1          {
+  80   2              return FALSE;
+  81   2          }
+  82   1       
+  83   1          // 删除校验位
+  84   1          temp_value1 >>= 1;
+  85   1          temp_value2 >>= 1;
+  86   1          
+  87   1          Temperature = (temp_value1 << 8) | temp_value2;
+  88   1          *temp_value16 = Temperature;
+  89   1          
+  90   1          return TRUE;
+  91   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    230    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       8
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

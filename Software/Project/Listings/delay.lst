@@ -1,0 +1,50 @@
+C51 COMPILER V9.59.0.0   DELAY                                                             03/13/2020 13:29:31 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE DELAY
+OBJECT MODULE PLACED IN .\Objects\delay.obj
+COMPILER INVOKED BY: h:\Keil_v5\C51\BIN\C51.EXE ..\BSP\DELAY\delay.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\BSP\TSIC506;..\B
+                    -SP\USART;..\BSP\BSP;..\BSP\DELAY) DEBUG OBJECTEXTEND PRINT(.\Listings\delay.lst) OBJECT(.\Objects\delay.obj)
+
+line level    source
+
+   1          #include <delay.h>
+   2          
+   3          /*
+   4           * @brief:自适应毫秒延时函数,理论定时范围1~65535
+   5           *
+   6           *
+   7           */
+   8          void delay_ms(unsigned int ms)
+   9          {
+  10   1           unsigned int i;
+  11   1               do{
+  12   2                    i = MS_STEP;
+  13   2                        while(--i);   // 14T per loop
+  14   2           }while(--ms);
+  15   1      }
+  16          
+  17          
+  18          /* 1T单片机，主频11.0592M，延时函数，延时10us */
+  19          void delay_5us(uchar step)   // 误差 -0.053530092593us
+  20          {
+  21   1          unsigned char a;
+  22   1          while(step-- > 0)
+  23   1          {
+  24   2              for(a=1;a>0;a--);
+  25   2          }
+  26   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     52    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
